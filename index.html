@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#030d07">
+  <title>US 🌻</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #020b06;
+      font-family: 'Montserrat', sans-serif;
+      color: #fff6d6;
+    }
+
+    /* Ambient Night Sky & Field */
+    .scene {
+      position: relative;
+      width: 100vw;
+      height: 100dvh;
+      min-height: 520px;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(255, 210, 77, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 85%, #133a21 0%, #081e13 45%, #020a06 85%);
+    }
+
+    /* Soft twinkling stars & cosmic dust */
+    .stars {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(rgba(255, 245, 196, 0.75) 1px, transparent 1.6px),
+        radial-gradient(rgba(255, 215, 100, 0.5) 1.2px, transparent 1.8px),
+        radial-gradient(rgba(180, 240, 195, 0.45) 1px, transparent 1.6px);
+      background-size: 89px 101px, 143px 157px, 67px 73px;
+      animation: twinkle 5s ease-in-out infinite alternate;
+      opacity: 0.75;
+      pointer-events: none;
+    }
+
+    /* Warm atmospheric glow behind flowers */
+    .warm-glow {
+      position: absolute;
+      left: 50%;
+      top: 55%;
+      width: min(120vw, 1000px);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(255, 190, 46, 0.14) 0%, rgba(245, 158, 11, 0.05) 45%, transparent 70%);
+      filter: blur(25px);
+      pointer-events: none;
+      border-radius: 50%;
+    }
+
+    /* Garden container holding realistic sunflowers */
+    #garden {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      z-index: 2;
+    }
+
+    /* Realistic Sunflower wrapper */
+    .sunflower {
+      position: absolute;
+      width: var(--size);
+      left: var(--x);
+      bottom: var(--bottom);
+      transform-origin: 50% 100%;
+      cursor: pointer;
+      pointer-events: auto;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.45));
+      transition: filter 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation:
+        bloomRise var(--rise-time) cubic-bezier(0.16, 0.9, 0.28, 1) both,
+        gentleSway var(--sway-time) ease-in-out infinite alternate;
+      animation-delay: var(--delay), calc(var(--delay) + var(--rise-time));
+    }
+
+    .sunflower:hover {
+      filter: drop-shadow(0 0 28px rgba(255, 213, 79, 0.65)) drop-shadow(0 12px 30px rgba(0, 0, 0, 0.6));
+      transform: scale(1.045) translateY(-5px);
+    }
+
+    .sunflower:active {
+      transform: scale(0.98) translateY(0);
+    }
+
+    .sunflower svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    /* Floating glowing pollen fireflies */
+    .pollen {
+      position: absolute;
+      width: var(--p-size, 4px);
+      height: var(--p-size, 4px);
+      border-radius: 50%;
+      background: #ffe680;
+      box-shadow: 0 0 10px 3px rgba(255, 214, 77, 0.8), 0 0 20px 6px rgba(255, 179, 0, 0.35);
+      left: var(--x);
+      top: var(--y);
+      opacity: 0;
+      pointer-events: none;
+      animation: floatPollen var(--p-dur) ease-in-out infinite alternate;
+      animation-delay: var(--p-del);
+    }
+
+    /* Vignette for dramatic contrast */
+    .vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, transparent 45%, rgba(1, 10, 5, 0.65) 85%, rgba(0, 5, 2, 0.92) 100%);
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    /* Central Content Reveal: Only Today's Date and US / Subtitle */
+    .content-box {
+      position: absolute;
+      z-index: 10;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -42%) scale(0.85);
+      width: min(92%, 680px);
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.8s cubic-bezier(0.16, 1, 0.3, 1), transform 1.8s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.05rem;
+    }
+
+    .content-box.visible {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      pointer-events: auto;
+    }
+
+    /* Today's Date */
+    .today-date {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 600;
+      font-size: clamp(2.3rem, 7vw, 4.8rem);
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+      font-variant-numeric: lining-nums;
+      color: #fff9e6;
+      text-shadow:
+        0 0 18px rgba(255, 215, 64, 0.55),
+        0 0 45px rgba(245, 158, 11, 0.35),
+        0 4px 18px rgba(0, 0, 0, 0.85);
+      user-select: none;
+    }
+
+    /* The subtitle text ("When it all began !!" / "US") */
+    .us-text {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 500;
+      font-size: clamp(0.95rem, 2.4vw, 1.45rem);
+      letter-spacing: clamp(0.18em, 0.4vw, 0.35em);
+      text-indent: clamp(0.18em, 0.4vw, 0.35em);
+      color: #ffd752;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(255, 215, 82, 0.7);
+      position: relative;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .us-text::before,
+    .us-text::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: clamp(20px, 4vw, 42px);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 215, 82, 0.65), transparent);
+    }
+
+    .us-text::before {
+      right: calc(100% + 14px);
+    }
+
+    .us-text::after {
+      left: calc(100% + 14px);
+    }
+
+    /* Music Song Link */
+    .song-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      max-width: 95%;
+      margin-top: 0.35rem;
+      padding: 0.85rem 1.45rem;
+      background: rgba(10, 32, 20, 0.75);
+      border: 1px solid rgba(255, 215, 82, 0.45);
+      border-radius: 999px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: #fff6d6;
+      text-decoration: none;
+      font-size: clamp(0.78rem, 2.2vw, 0.94rem);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.4),
+        0 0 25px rgba(255, 215, 82, 0.2);
+      transition: all 0.3s cubic-bezier(0.2, 0.8, 0.3, 1);
+      word-break: break-all;
+    }
+
+    .song-link:hover {
+      background: rgba(22, 60, 38, 0.9);
+      border-color: rgba(255, 220, 100, 0.85);
+      transform: translateY(-2.5px) scale(1.02);
+      box-shadow:
+        0 12px 32px rgba(0, 0, 0, 0.5),
+        0 0 36px rgba(255, 215, 82, 0.45);
+      color: #ffffff;
+    }
+
+    .song-link:active {
+      transform: translateY(0) scale(0.99);
+    }
+
+    .play-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #ffd54f;
+      color: #0b2214;
+      flex-shrink: 0;
+      box-shadow: 0 0 14px rgba(255, 213, 79, 0.75);
+    }
+
+    .play-icon svg {
+      width: 11px;
+      height: 11px;
+      fill: currentColor;
+      margin-left: 2px;
+    }
+
+    .link-url-text {
+      color: #ffe899;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      opacity: 0.95;
+    }
+
+    /* Keyframes */
+    @keyframes bloomRise {
+      0% {
+        transform: scale(0.05) translateY(90px);
+        opacity: 0;
+      }
+
+      35% {
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes gentleSway {
+      0% {
+        transform: rotate(calc(var(--tilt, 0deg) - 2.8deg));
+      }
+
+      100% {
+        transform: rotate(calc(var(--tilt, 0deg) + 2.8deg));
+      }
+    }
+
+    @keyframes twinkle {
+      0% {
+        opacity: 0.45;
+      }
+
+      100% {
+        opacity: 0.85;
+      }
+    }
+
+    @keyframes floatPollen {
+      0% {
+        transform: translate(-14px, 16px);
+        opacity: 0;
+      }
+
+      30% {
+        opacity: 0.95;
+      }
+
+      70% {
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: translate(32px, -45px);
+        opacity: 0.1;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .content-box {
+        top: 26%;
+        gap: 0.95rem;
+      }
+
+      .song-link {
+        padding: 0.75rem 1.15rem;
+      }
+
+      .play-icon {
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .sunflower,
+      .pollen,
+      .stars {
+        animation: none !important;
+      }
+
+      .content-box {
+        transition: none !important;
+        opacity: 1 !important;
+        transform: translate(-50%, -50%) !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="scene" id="scene" aria-label="An interactive sunflower field">
+    <div class="stars"></div>
+    <div class="warm-glow"></div>
+    <div id="garden"></div>
+    <div class="vignette"></div>
+
+    <!-- Strictly: Date and Subtitle -->
+    <section class="content-box" id="contentBox" aria-live="polite">
+      <div class="today-date" id="todayDate">10th October</div>
+      <div class="us-text">When it all began !!</div>
+    </section>
+  </main>
+
+  <script>
+    const SONG_URL = "https://youtu.be/1jO2wSpAoxA?si=Ans21XcQZF4w-LBF";
+
+    // Set date
+    (function setDate() {
+      const dateEl = document.getElementById('todayDate');
+      dateEl.textContent = "10th October";
+    })();
+
+    // Generate realistic anatomical sunflower SVG
+    function createRealisticSunflowerSVG(seed) {
+      const uid = 'sf_' + seed;
+
+      // Realistic Sunflower Petal Geometry (Lanceolate with pointed tip)
+      // Path centered at (0, 0), extending outward along negative Y axis to radius ~62
+      const petalPath = "M 0 -19 C -7 -29, -8.5 -46, 0 -63 C 8.5 -46, 7 -29, 0 -19 Z";
+      const petalVein = "M 0 -22 L 0 -58";
+
+      // Outer petal whorl: 28 petals in deep rich amber/golden tones
+      const outerCount = 28;
+      let outerPetals = '';
+      for (let i = 0; i < outerCount; i++) {
+        const rot = (i * 360 / outerCount) + ((seed * 11) % 4) - 2;
+        const scaleY = 0.95 + ((i + seed) % 5) * 0.025;
+        outerPetals += `<g transform="rotate(${rot.toFixed(2)}) scale(1, ${scaleY.toFixed(3)})">
+          <path d="${petalPath}" fill="url(#outerPetalGrad_${uid})" stroke="#d97706" stroke-width="0.45" stroke-opacity="0.45"/>
+          <path d="${petalVein}" stroke="#b45309" stroke-width="0.5" stroke-opacity="0.4" fill="none"/>
+        </g>`;
+      }
+
+      // Inner petal whorl: 28 petals offset by half-phase (interleaved) in bright radiant sunflower yellow
+      const innerCount = 28;
+      let innerPetals = '';
+      const halfStep = 360 / (innerCount * 2);
+      for (let i = 0; i < innerCount; i++) {
+        const rot = (i * 360 / innerCount) + halfStep + ((seed * 7) % 3) - 1.5;
+        const scaleY = 0.91 + ((i + seed * 3) % 5) * 0.028;
+        innerPetals += `<g transform="rotate(${rot.toFixed(2)}) scale(0.96, ${scaleY.toFixed(3)})">
+          <path d="${petalPath}" fill="url(#innerPetalGrad_${uid})" stroke="#ffd000" stroke-width="0.4" stroke-opacity="0.6"/>
+          <path d="${petalVein}" stroke="#d97706" stroke-width="0.5" stroke-opacity="0.35" fill="none"/>
+        </g>`;
+      }
+
+      // Miniature florets ring right around seed disc rim (24 small florets)
+      let rimPetals = '';
+      for (let i = 0; i < 24; i++) {
+        const rot = i * 15;
+        rimPetals += `<ellipse cx="0" cy="-24" rx="2.4" ry="4.5" transform="rotate(${rot})" fill="#d97706" opacity="0.85"/>`;
+      }
+
+      // Fibonacci phyllotaxis spiral for the seed head disc (golden angle 137.507764° / 2.39996 rad)
+      const totalSeeds = 118;
+      let seedsSVG = '';
+      const c = 2.15; // spacing constant
+      for (let n = 0; n < totalSeeds; n++) {
+        const r = c * Math.sqrt(n);
+        const theta = n * 2.3999632;
+        const x = (r * Math.cos(theta)).toFixed(2);
+        const y = (r * Math.sin(theta)).toFixed(2);
+        const dotR = (0.7 + (n / totalSeeds) * 0.55).toFixed(2);
+
+        let dotColor;
+        if (n < 45) {
+          dotColor = (n % 2 === 0) ? '#160904' : '#261207';
+        } else if (n < 85) {
+          dotColor = (n % 2 === 0) ? '#3c1c09' : '#4d240c';
+        } else {
+          // outer disc florets bloom with golden-amber pollen dust
+          dotColor = (n % 3 === 0) ? '#8b4d13' : ((n % 3 === 1) ? '#b86e18' : '#e09825');
+        }
+
+        seedsSVG += `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${dotColor}"/>`;
+      }
+
+      // Organic stem curvature and height
+      const stemBend = -15 + ((seed * 17) % 31); // subtle left/right bend
+      const stemH = 210 + ((seed * 23) % 70);
+
+      // Leaves with broad cordate shape and sculpted veins
+      const leaf1Y = stemH * 0.42;
+      const leaf2Y = stemH * 0.68;
+
+      return `
+        <svg viewBox="-120 -105 240 ${stemH + 130}" aria-hidden="true">
+          <defs>
+            <!-- Outer petal gradient (warm deep gold/honey) -->
+            <linearGradient id="outerPetalGrad_${uid}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f59e0b"/>
+              <stop offset="45%" stop-color="#fbbf24"/>
+              <stop offset="90%" stop-color="#d97706"/>
+              <stop offset="100%" stop-color="#b45309"/>
+            </linearGradient>
+
+            <!-- Inner petal gradient (bright sunny sunflower yellow) -->
+            <linearGradient id="innerPetalGrad_${uid}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fff066"/>
+              <stop offset="35%" stop-color="#ffdc19"/>
+              <stop offset="85%" stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#d97706"/>
+            </linearGradient>
+
+            <!-- Stem gradient -->
+            <linearGradient id="stemGrad_${uid}" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#1f5429"/>
+              <stop offset="50%" stop-color="#3d8f4d"/>
+              <stop offset="100%" stop-color="#184320"/>
+            </linearGradient>
+
+            <!-- Leaf gradient -->
+            <linearGradient id="leafGrad_${uid}" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#469956"/>
+              <stop offset="60%" stop-color="#2a6d38"/>
+              <stop offset="100%" stop-color="#15421f"/>
+            </linearGradient>
+
+            <!-- Center Disc radial gradient -->
+            <radialGradient id="discGrad_${uid}" cx="44%" cy="40%" r="52%">
+              <stop offset="0%" stop-color="#1e0c04"/>
+              <stop offset="50%" stop-color="#2b1407"/>
+              <stop offset="78%" stop-color="#4a220b"/>
+              <stop offset="92%" stop-color="#7c3f10"/>
+              <stop offset="97%" stop-color="#ba701a"/>
+              <stop offset="100%" stop-color="#3a1c09"/>
+            </radialGradient>
+          </defs>
+
+          <!-- Main Plant Stem -->
+          <path d="M 0 10 Q ${stemBend} ${stemH * 0.55} 0 ${stemH}" 
+                fill="none" 
+                stroke="url(#stemGrad_${uid})" 
+                stroke-width="9.5" 
+                stroke-linecap="round"/>
+
+          <!-- Leaf 1 (Left broad sunflower leaf) -->
+          <g transform="translate(${stemBend * 0.38}, ${leaf1Y}) rotate(-26)">
+            <path d="M 0 0 C -24 -14, -55 -2, -62 24 C -68 50, -42 70, -2 60 C 1 35, 1 12, 0 0 Z" 
+                  fill="url(#leafGrad_${uid})" 
+                  stroke="#57aa68" 
+                  stroke-width="1"/>
+            <!-- Leaf veins -->
+            <path d="M 0 0 C -20 18, -42 36, -58 28" fill="none" stroke="#67ba79" stroke-width="1.3" opacity="0.75"/>
+            <path d="M -18 16 C -32 10, -46 11, -54 18" fill="none" stroke="#67ba79" stroke-width="0.8" opacity="0.6"/>
+            <path d="M -30 26 C -40 38, -48 45, -52 48" fill="none" stroke="#67ba79" stroke-width="0.8" opacity="0.6"/>
+          </g>
+
+          <!-- Leaf 2 (Right broad sunflower leaf) -->
+          <g transform="translate(${stemBend * 0.65}, ${leaf2Y}) rotate(32)">
+            <path d="M 0 0 C 24 -14, 55 -2, 62 24 C 68 50, 42 70, 2 60 C -1 35, -1 12, 0 0 Z" 
+                  fill="url(#leafGrad_${uid})" 
+                  stroke="#57aa68" 
+                  stroke-width="1"/>
+            <!-- Leaf veins -->
+            <path d="M 0 0 C 20 18, 42 36, 58 28" fill="none" stroke="#67ba79" stroke-width="1.3" opacity="0.75"/>
+            <path d="M 18 16 C 32 10, 46 11, 54 18" fill="none" stroke="#67ba79" stroke-width="0.8" opacity="0.6"/>
+            <path d="M 30 26 C 40 38, 48 45, 52 48" fill="none" stroke="#67ba79" stroke-width="0.8" opacity="0.6"/>
+          </g>
+
+          <!-- Flower Head -->
+          <g transform="translate(0, 0)">
+            <!-- Green Calyx / Sepals behind petals -->
+            <g opacity="0.9">
+              ${Array.from({ length: 16 }, (_, i) => `<polygon points="0,-16 -7,-36 7,-36" transform="rotate(${i * 22.5 + 5})" fill="#2d6e38" stroke="#3d8f4d" stroke-width="0.6"/>`).join('')}
+            </g>
+
+            <!-- Outer Ray Petals -->
+            ${outerPetals}
+
+            <!-- Inner Ray Petals -->
+            ${innerPetals}
+
+            <!-- Mini rim petals -->
+            ${rimPetals}
+
+            <!-- Center Seed Disc Base -->
+            <circle cx="0" cy="0" r="25.5" fill="url(#discGrad_${uid})" stroke="#9c5816" stroke-width="1.5"/>
+
+            <!-- Fluffy outer floret rim texture -->
+            <circle cx="0" cy="0" r="24.5" fill="none" stroke="#d98218" stroke-width="1.2" stroke-dasharray="1.5 2.5" opacity="0.75"/>
+
+            <!-- Fibonacci Seed Pattern -->
+            ${seedsSVG}
+
+            <!-- Center disc subtle highlight -->
+            <circle cx="-5" cy="-6" r="14" fill="#ffffff" opacity="0.04" filter="blur(4px)"/>
+          </g>
+        </svg>
+      `;
+    }
+
+    // Build Sunflower Garden
+    function buildGarden() {
+      const garden = document.getElementById('garden');
+      garden.innerHTML = '';
+
+      const w = window.innerWidth;
+      const count = w < 600 ? 16 : 28;
+
+      for (let i = 0; i < count; i++) {
+        const flower = document.createElement('div');
+        flower.className = 'sunflower';
+
+        // Size calculation for realistic perspective depth
+        const baseSize = w < 600 ? 95 : 130;
+        const sizeVar = Math.random() * (w < 600 ? 90 : 150);
+        const size = Math.round(baseSize + sizeVar);
+
+        // Organic placement across width
+        const x = (i / count * 98) + (Math.random() * 8 - 4);
+        const bottom = -22 + Math.random() * 24;
+        const riseTime = (2.2 + Math.random() * 1.6).toFixed(2);
+        const swayTime = (3.5 + Math.random() * 3.0).toFixed(2);
+        const delay = (Math.random() * 2.2).toFixed(2);
+        const tilt = (Math.random() * 14 - 7).toFixed(1);
+
+        flower.style.setProperty('--size', `${size}px`);
+        flower.style.setProperty('--x', `${x}%`);
+        flower.style.setProperty('--bottom', `${bottom}%`);
+        flower.style.setProperty('--rise-time', `${riseTime}s`);
+        flower.style.setProperty('--sway-time', `${swayTime}s`);
+        flower.style.setProperty('--delay', `${delay}s`);
+        flower.style.setProperty('--tilt', `${tilt}deg`);
+        flower.style.zIndex = Math.round(size);
+
+        flower.setAttribute('title', '🌻 Listen to our song');
+        flower.setAttribute('role', 'button');
+        flower.setAttribute('tabindex', '0');
+        flower.setAttribute('aria-label', 'Click sunflower to open song');
+
+        // Click any sunflower to open song link
+        flower.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.open(SONG_URL, '_blank', 'noopener,noreferrer');
+        });
+
+        // Keyboard accessibility
+        flower.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            window.open(SONG_URL, '_blank', 'noopener,noreferrer');
+          }
+        });
+
+        flower.innerHTML = createRealisticSunflowerSVG(i);
+        garden.appendChild(flower);
+      }
+
+      // Add gentle golden pollen fireflies
+      const pollenCount = w < 600 ? 25 : 45;
+      for (let j = 0; j < pollenCount; j++) {
+        const p = document.createElement('div');
+        p.className = 'pollen';
+        p.style.setProperty('--x', `${Math.random() * 100}%`);
+        p.style.setProperty('--y', `${Math.random() * 100}%`);
+        p.style.setProperty('--p-dur', `${4 + Math.random() * 5}s`);
+        p.style.setProperty('--p-del', `${Math.random() * 4}s`);
+        p.style.setProperty('--p-size', `${2.5 + Math.random() * 3.5}px`);
+        garden.appendChild(p);
+      }
+    }
+
+    // Initialize and trigger reveal after flowers finish animation
+    const contentBox = document.getElementById('contentBox');
+    buildGarden();
+
+    // Flowers take ~3.8s to fully bloom into the field, then show date, US, and song link
+    setTimeout(() => {
+      contentBox.classList.add('visible');
+    }, 3800);
+
+    // Rebuild on window resize for optimal density
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        buildGarden();
+      }, 300);
+    });
+  </script>
+</body>
+
+</html>
